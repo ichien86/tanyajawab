@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  # -------------------------------------------------------------
+  # Layanan Database MongoDB 6.0 Native
+  # -------------------------------------------------------------
+  mongo:
+    image: mongo:6.0
+    container_name: tanyajawab-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=tanyajawab
+
+  # -------------------------------------------------------------
+  # Layanan Aplikasi TanyaJawab (Frontend + Backend + SSE)
+  # -------------------------------------------------------------
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tanyajawab-app
+    restart: unless-stopped
+    ports:
+      - "5001:5001"
+    environment:
+      - PORT=5001
+      - MONGO_URI=mongodb://mongo:27017/tanyajawab
+      - JWT_SECRET=tanyajawab_super_secret_jwt_key_2026
+    depends_on:
+      - mongo
+    volumes:
+      - uploads_data:/app/backend/uploads
+
+volumes:
+  mongo_data:
+    driver: local
+  uploads_data:
+    driver: local
+

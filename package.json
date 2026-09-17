@@ -1,0 +1,27 @@
+{
+  "name": "tanyajawab-app",
+  "version": "2.0.0",
+  "description": "Aplikasi Interaktif Tanya Jawab & Formulir Dinamis Sosialisasi (TDD v2.0)",
+  "scripts": {
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev": "npm run start:full",
+    "build:frontend": "cd frontend && npm run build",
+    "build": "npm run build:frontend",
+    "start": "cd backend && npm start",
+    "start:full": "npm run build && npm start",
+    "seed": "cd backend && npm run seed",
+    "test": "cd backend && npm test"
+  },
+  "keywords": [
+    "tanyajawab",
+    "qna",
+    "conditional-form",
+    "realtime",
+    "sse",
+    "mongodb"
+  ],
+  "author": "",
+  "license": "ISC"
+}
+

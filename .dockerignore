@@ -1,0 +1,14 @@
+node_modules
+*/node_modules
+.git
+.github
+*.log
+backend/uploads/*
+!backend/uploads/.gitkeep
+backend/data/*.json
+!backend/data/.gitkeep
+.env
+.DS_Store
+dist
+frontend/dist
+

@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: tanyajawab
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: cd frontend && npm install && npm run build && cd ../backend && npm install
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: MONGO_URI
+        sync: false
+        # Masukkan Connection String MongoDB Atlas Anda di dashboard Render:
+        # Contoh: mongodb+srv://username:password@cluster.mongodb.net/tanyajawab?retryWrites=true&w=majority
+

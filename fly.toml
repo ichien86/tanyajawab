@@ -1,0 +1,33 @@
+# fly.toml app configuration file generated for tanyajawab-app on 2026-09-17T21:15:24+07:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'tanyajawab-app'
+primary_region = 'sin'
+
+[build]
+  dockerfile = 'Dockerfile'
+
+[env]
+  NODE_ENV = 'production'
+  PORT = '5001'
+  DATA_DIR = '/app/backend/uploads/data'
+
+[[mounts]]
+  source = 'uploads_data'
+  destination = '/app/backend/uploads'
+  initial_size = '1gb'
+
+[http_service]
+  internal_port = 5001
+  force_https = true
+  auto_stop_machines = 'off'
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ['app']
+
+[[vm]]
+  memory = '512mb'
+  cpus = 1
+  memory_mb = 512

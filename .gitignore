@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+*/node_modules/
+
+# OS and Editor
+.DS_Store
+.vscode/
+*.log
+
+# Production build
+dist/
+frontend/dist/
+
+# Uploads & local data (keep directory structure with .gitkeep)
+backend/uploads/*
+!backend/uploads/.gitkeep
+backend/data/*.json
+!backend/data/.gitkeep
+
+# Environment variables & secrets
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
