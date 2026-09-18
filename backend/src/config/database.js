@@ -50,6 +50,7 @@ const QnaThreadSchema = new mongoose.Schema({
       type: { type: String, enum: ['short_text', 'long_text', 'radio', 'checkbox', 'file'], required: true },
       label: { type: String, required: true },
       upload_text: { type: String, default: '' },
+      allow_other: { type: Boolean, default: false },
       options: [{ type: String }],
       required: { type: Boolean, default: false },
       order: { type: Number, default: 0 },

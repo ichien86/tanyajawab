@@ -35,6 +35,13 @@ it('Operator "equals": mencocokkan nilai persis dengan toleransi whitespace & hu
   assert.strictEqual(evaluateCondition(null, rule), false);
 });
 
+it('Operator "equals": mendukung pencocokan pilihan "Lainnya" dengan isian kustom (Lainnya: ...)', () => {
+  const rule = { parent_id: 'q1', operator: 'equals', trigger_value: 'Lainnya', action: 'show' };
+  assert.strictEqual(evaluateCondition('Lainnya', rule), true);
+  assert.strictEqual(evaluateCondition('Lainnya: Posko Mandiri', rule), true);
+  assert.strictEqual(evaluateCondition('Opsi Lain', rule), false);
+});
+
 it('Operator "not_equals": mengembalikan true jika tidak cocok', () => {
   const rule = { parent_id: 'q1', operator: 'not_equals', trigger_value: 'Tidak', action: 'show' };
   assert.strictEqual(evaluateCondition('Ya', rule), true);

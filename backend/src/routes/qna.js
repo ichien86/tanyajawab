@@ -129,6 +129,7 @@ router.post('/questions', async (req, res) => {
         type: f.type || 'short_text',
         label: (f.label || `Pertanyaan #${idx + 1}`).trim(),
         upload_text: (f.upload_text || '').trim(),
+        allow_other: Boolean(f.allow_other),
         options: Array.isArray(f.options)
           ? f.options.map((o) => String(o).trim()).filter(Boolean)
           : [],

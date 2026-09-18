@@ -24,18 +24,37 @@ export function evaluateCondition(parentAnswer, rule) {
   const triggerVal = rule.trigger_value;
 
   switch (rule.operator) {
-    case 'equals':
-      return String(parentAnswer).trim().toLowerCase() === String(triggerVal).trim().toLowerCase();
+    case 'equals': {
+      const pStr = String(parentAnswer).trim().toLowerCase();
+      const tStr = String(triggerVal).trim().toLowerCase();
+      if (tStr === 'lainnya') {
+        return pStr === 'lainnya' || pStr.startsWith('lainnya:');
+      }
+      return pStr === tStr;
+    }
 
-    case 'not_equals':
-      return String(parentAnswer).trim().toLowerCase() !== String(triggerVal).trim().toLowerCase();
+    case 'not_equals': {
+      const pStr = String(parentAnswer).trim().toLowerCase();
+      const tStr = String(triggerVal).trim().toLowerCase();
+      if (tStr === 'lainnya') {
+        return pStr !== 'lainnya' && !pStr.startsWith('lainnya:');
+      }
+      return pStr !== tStr;
+    }
 
     case 'contains':
       if (Array.isArray(parentAnswer)) {
+        const tStr = String(triggerVal).trim().toLowerCase();
+        if (tStr === 'lainnya') {
+          return parentAnswer.some((p) => {
+            const s = String(p).trim().toLowerCase();
+            return s === 'lainnya' || s.startsWith('lainnya:');
+          });
+        }
         if (Array.isArray(triggerVal)) {
           return triggerVal.some((v) => parentAnswer.map((p) => String(p).trim().toLowerCase()).includes(String(v).trim().toLowerCase()));
         }
-        return parentAnswer.map((p) => String(p).trim().toLowerCase()).includes(String(triggerVal).trim().toLowerCase());
+        return parentAnswer.map((p) => String(p).trim().toLowerCase()).includes(tStr);
       }
       return String(parentAnswer).toLowerCase().includes(String(triggerVal).toLowerCase());
 

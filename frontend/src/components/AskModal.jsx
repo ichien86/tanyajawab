@@ -148,6 +148,20 @@ export default function AskModal({ isOpen, onClose, onSubmit }) {
     handleUpdateField(fieldIdx, { options: [...opts, `Pilihan ${opts.length + 1}`] });
   };
 
+  const handleAddOtherOption = (fieldIdx) => {
+    const f = fields[fieldIdx];
+    const opts = f.options || [];
+    const hasOther = opts.some((o) => (o || '').trim().toLowerCase().startsWith('lainnya'));
+    if (!hasOther) {
+      handleUpdateField(fieldIdx, {
+        allow_other: true,
+        options: [...opts, 'Lainnya']
+      });
+    } else {
+      handleUpdateField(fieldIdx, { allow_other: true });
+    }
+  };
+
   const handleUpdateOption = (fieldIdx, optIdx, val) => {
     const f = fields[fieldIdx];
     const opts = [...(f.options || [])];
@@ -230,6 +244,7 @@ export default function AskModal({ isOpen, onClose, onSubmit }) {
           label: cleanLabel,
           upload_text: cleanUploadText,
           options: cleanOpts,
+          allow_other: Boolean(f.allow_other) || cleanOpts.some((o) => o.toLowerCase().startsWith('lainnya')),
           required: Boolean(f.required),
           logic: cleanLogic
         };
@@ -438,41 +453,95 @@ export default function AskModal({ isOpen, onClose, onSubmit }) {
 
                     {/* Opsi Pilihan untuk Radio / Checkbox */}
                     {(f.type === 'radio' || f.type === 'checkbox') && (
-                      <div className="bg-slate-50 p-2.5 rounded-lg space-y-1.5">
+                      <div className="bg-slate-50 p-2.5 rounded-lg space-y-2">
                         <div className="flex items-center justify-between">
                           <span className="text-[11px] font-semibold text-slate-600">Pilihan Opsi:</span>
-                          <button
-                            type="button"
-                            onClick={() => handleAddOption(fIdx)}
-                            className="text-[11px] text-sky-600 font-semibold hover:text-sky-800 flex items-center gap-0.5"
-                          >
-                            <Plus className="w-3 h-3" /> Tambah Opsi
-                          </button>
-                        </div>
-                        {(f.options || []).map((opt, oIdx) => (
-                          <div key={oIdx} className="flex items-center gap-1.5">
-                            <input
-                              type="text"
-                              value={opt}
-                              placeholder={`Pilihan ${oIdx + 1}`}
-                              onFocus={(e) => {
-                                const v = (e.target.value || '').trim();
-                                if (['Opsi Ya', 'Opsi Tidak'].includes(v) || /^Pilihan\s*\d+$/i.test(v)) {
-                                  handleUpdateOption(fIdx, oIdx, '');
-                                }
-                              }}
-                              onChange={(e) => handleUpdateOption(fIdx, oIdx, e.target.value)}
-                              className="flex-1 px-2 py-1 text-xs bg-white border border-slate-200 rounded focus:outline-none"
-                            />
+                          <div className="flex items-center gap-2">
                             <button
                               type="button"
-                              onClick={() => handleRemoveOption(fIdx, oIdx)}
-                              className="text-slate-400 hover:text-rose-600 p-0.5"
+                              onClick={() => handleAddOption(fIdx)}
+                              className="text-[11px] text-sky-600 font-semibold hover:text-sky-800 flex items-center gap-0.5"
                             >
-                              <Trash2 className="w-3 h-3" />
+                              <Plus className="w-3 h-3" /> Tambah Opsi
+                            </button>
+                            <span className="text-slate-300">|</span>
+                            <button
+                              type="button"
+                              onClick={() => handleAddOtherOption(fIdx)}
+                              className="text-[11px] text-indigo-600 font-semibold hover:text-indigo-800 flex items-center gap-0.5"
+                              title="Tambahkan opsi 'Lainnya' yang memungkinkan responden mengetik jawaban sendiri"
+                            >
+                              <Plus className="w-3 h-3" /> Tambah "Lainnya"
                             </button>
                           </div>
-                        ))}
+                        </div>
+
+                        {(f.options || []).map((opt, oIdx) => {
+                          const isOther = (opt || '').trim().toLowerCase().startsWith('lainnya');
+                          return (
+                            <div key={oIdx} className="flex items-center gap-1.5">
+                              <input
+                                type="text"
+                                value={opt}
+                                placeholder={`Pilihan ${oIdx + 1}`}
+                                onFocus={(e) => {
+                                  const v = (e.target.value || '').trim();
+                                  if (['Opsi Ya', 'Opsi Tidak'].includes(v) || /^Pilihan\s*\d+$/i.test(v)) {
+                                    handleUpdateOption(fIdx, oIdx, '');
+                                  }
+                                }}
+                                onChange={(e) => handleUpdateOption(fIdx, oIdx, e.target.value)}
+                                className={`flex-1 px-2 py-1 text-xs bg-white border rounded focus:outline-none ${
+                                  isOther ? 'border-indigo-300 text-indigo-900 font-medium' : 'border-slate-200'
+                                }`}
+                              />
+                              {isOther && (
+                                <span className="px-1.5 py-0.5 text-[10px] bg-indigo-50 text-indigo-700 font-semibold rounded border border-indigo-200 whitespace-nowrap">
+                                  Isian Responden
+                                </span>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveOption(fIdx, oIdx)}
+                                className="text-slate-400 hover:text-rose-600 p-0.5"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </div>
+                          );
+                        })}
+
+                        {/* Opsi toggle Sertakan Pilihan Lainnya */}
+                        <div className="pt-1.5 border-t border-slate-200/70">
+                          <label className="flex items-center gap-1.5 text-[11px] text-slate-700 cursor-pointer select-none font-medium">
+                            <input
+                              type="checkbox"
+                              checked={Boolean(f.allow_other) || (f.options || []).some((o) => (o || '').trim().toLowerCase().startsWith('lainnya'))}
+                              onChange={(e) => {
+                                const checked = e.target.checked;
+                                if (checked) {
+                                  const hasLainnya = (f.options || []).some((o) => (o || '').trim().toLowerCase().startsWith('lainnya'));
+                                  if (!hasLainnya) {
+                                    handleUpdateField(fIdx, {
+                                      allow_other: true,
+                                      options: [...(f.options || []), 'Lainnya']
+                                    });
+                                  } else {
+                                    handleUpdateField(fIdx, { allow_other: true });
+                                  }
+                                } else {
+                                  const filtered = (f.options || []).filter((o) => !(o || '').trim().toLowerCase().startsWith('lainnya'));
+                                  handleUpdateField(fIdx, {
+                                    allow_other: false,
+                                    options: filtered
+                                  });
+                                }
+                              }}
+                              className="rounded text-indigo-600"
+                            />
+                            <span>Sediakan pilihan <strong>"Lainnya"</strong> (responden dapat mengisi sendiri)</span>
+                          </label>
+                        </div>
                       </div>
                     )}
 

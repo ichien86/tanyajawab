@@ -17,6 +17,7 @@ export default function QuestionCard({
   const [answerAuthor, setAnswerAuthor] = useState('');
   const [freeTextContent, setFreeTextContent] = useState('');
   const [structuredAnswers, setStructuredAnswers] = useState({});
+  const [otherTextMap, setOtherTextMap] = useState({});
   const [uploadedFile, setUploadedFile] = useState(null);
   const [submittingAnswer, setSubmittingAnswer] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -59,6 +60,10 @@ export default function QuestionCard({
               setErrorMsg(`Pertanyaan "${f.label}" wajib diisi.`);
               return;
             }
+            if (f.required && (val === 'Lainnya' || val === 'Lainnya:' || (Array.isArray(val) && val.some((x) => x === 'Lainnya' || x === 'Lainnya:')))) {
+              setErrorMsg(`Silakan tuliskan isian untuk pilihan "Lainnya" pada "${f.label}".`);
+              return;
+            }
           }
         }
       }
@@ -94,6 +99,7 @@ export default function QuestionCard({
 
       setFreeTextContent('');
       setStructuredAnswers({});
+      setOtherTextMap({});
       setUploadedFile(null);
       setShowAnswerForm(false);
       setShowAnswers(true);
@@ -301,41 +307,169 @@ export default function QuestionCard({
                         />
                       )}
 
-                      {f.type === 'radio' && (
-                        <div className="space-y-1.5">
-                          {(f.options || []).map((opt) => (
-                            <label key={opt} className="flex items-center gap-2 p-2 rounded-lg border text-xs cursor-pointer hover:bg-slate-50">
-                              <input
-                                type="radio"
-                                name={f.field_id}
-                                checked={structuredAnswers[f.field_id] === opt}
-                                onChange={() => handleFieldAnswerChange(f.field_id, opt)}
-                                className="text-sky-600"
-                              />
-                              <span>{opt}</span>
-                            </label>
-                          ))}
-                        </div>
-                      )}
+                      {f.type === 'radio' && (() => {
+                        let renderOptions = [...(f.options || [])];
+                        if (f.allow_other && !renderOptions.some((o) => (o || '').trim().toLowerCase().startsWith('lainnya'))) {
+                          renderOptions.push('Lainnya');
+                        }
 
-                      {f.type === 'checkbox' && (
-                        <div className="space-y-1.5">
-                          {(f.options || []).map((opt) => {
-                            const isChecked = Array.isArray(structuredAnswers[f.field_id]) && structuredAnswers[f.field_id].includes(opt);
-                            return (
-                              <label key={opt} className="flex items-center gap-2 p-2 rounded-lg border text-xs cursor-pointer hover:bg-slate-50">
-                                <input
-                                  type="checkbox"
-                                  checked={isChecked}
-                                  onChange={() => handleCheckboxToggle(f.field_id, opt)}
-                                  className="text-sky-600 rounded"
-                                />
-                                <span>{opt}</span>
-                              </label>
-                            );
-                          })}
-                        </div>
-                      )}
+                        return (
+                          <div className="space-y-1.5">
+                            {renderOptions.map((opt) => {
+                              const isOther = (opt || '').trim().toLowerCase().startsWith('lainnya');
+                              const currentVal = structuredAnswers[f.field_id];
+                              const isSelected = isOther
+                                ? typeof currentVal === 'string' && (currentVal === opt || currentVal === 'Lainnya' || currentVal.startsWith('Lainnya:'))
+                                : currentVal === opt;
+
+                              if (isOther) {
+                                return (
+                                  <div
+                                    key={opt}
+                                    className={`p-2.5 rounded-lg border transition-all text-xs ${
+                                      isSelected ? 'border-sky-300 bg-sky-50/50 shadow-xs' : 'border-slate-200 hover:bg-slate-50'
+                                    }`}
+                                  >
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                      <input
+                                        type="radio"
+                                        name={f.field_id}
+                                        checked={isSelected}
+                                        onChange={() => {
+                                          const text = otherTextMap[f.field_id] || '';
+                                          handleFieldAnswerChange(f.field_id, text.trim() ? `Lainnya: ${text.trim()}` : 'Lainnya');
+                                        }}
+                                        className="text-sky-600"
+                                      />
+                                      <span className="font-semibold text-slate-800">{opt}</span>
+                                    </label>
+
+                                    {isSelected && (
+                                      <div className="mt-2 pl-6 animate-in fade-in duration-150">
+                                        <input
+                                          type="text"
+                                          placeholder="Tuliskan pilihan Anda di sini..."
+                                          value={
+                                            otherTextMap[f.field_id] !== undefined
+                                              ? otherTextMap[f.field_id]
+                                              : typeof currentVal === 'string' && currentVal.startsWith('Lainnya: ')
+                                              ? currentVal.replace(/^Lainnya:\s*/, '')
+                                              : ''
+                                          }
+                                          onChange={(e) => {
+                                            const text = e.target.value;
+                                            setOtherTextMap((prev) => ({ ...prev, [f.field_id]: text }));
+                                            handleFieldAnswerChange(f.field_id, text.trim() ? `Lainnya: ${text.trim()}` : 'Lainnya');
+                                          }}
+                                          className="w-full px-2.5 py-1.5 text-xs bg-white border border-sky-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-sky-500 shadow-xs placeholder:text-slate-400"
+                                          autoFocus
+                                        />
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              }
+
+                              return (
+                                <label key={opt} className="flex items-center gap-2 p-2 rounded-lg border text-xs cursor-pointer hover:bg-slate-50">
+                                  <input
+                                    type="radio"
+                                    name={f.field_id}
+                                    checked={isSelected}
+                                    onChange={() => {
+                                      handleFieldAnswerChange(f.field_id, opt);
+                                      setOtherTextMap((prev) => ({ ...prev, [f.field_id]: '' }));
+                                    }}
+                                    className="text-sky-600"
+                                  />
+                                  <span>{opt}</span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        );
+                      })()}
+
+                      {f.type === 'checkbox' && (() => {
+                        let renderOptions = [...(f.options || [])];
+                        if (f.allow_other && !renderOptions.some((o) => (o || '').trim().toLowerCase().startsWith('lainnya'))) {
+                          renderOptions.push('Lainnya');
+                        }
+
+                        const currentArr = Array.isArray(structuredAnswers[f.field_id]) ? structuredAnswers[f.field_id] : [];
+
+                        return (
+                          <div className="space-y-1.5">
+                            {renderOptions.map((opt) => {
+                              const isOther = (opt || '').trim().toLowerCase().startsWith('lainnya');
+                              const isChecked = isOther
+                                ? currentArr.some((x) => x === opt || x === 'Lainnya' || x.startsWith('Lainnya:'))
+                                : currentArr.includes(opt);
+
+                              if (isOther) {
+                                return (
+                                  <div
+                                    key={opt}
+                                    className={`p-2.5 rounded-lg border transition-all text-xs ${
+                                      isChecked ? 'border-sky-300 bg-sky-50/50 shadow-xs' : 'border-slate-200 hover:bg-slate-50'
+                                    }`}
+                                  >
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                      <input
+                                        type="checkbox"
+                                        checked={isChecked}
+                                        onChange={() => {
+                                          if (isChecked) {
+                                            const next = currentArr.filter((x) => !x.startsWith('Lainnya') && x !== opt);
+                                            handleFieldAnswerChange(f.field_id, next);
+                                          } else {
+                                            const text = otherTextMap[f.field_id] || '';
+                                            const otherVal = text.trim() ? `Lainnya: ${text.trim()}` : 'Lainnya';
+                                            handleFieldAnswerChange(f.field_id, [...currentArr, otherVal]);
+                                          }
+                                        }}
+                                        className="text-sky-600 rounded"
+                                      />
+                                      <span className="font-semibold text-slate-800">{opt}</span>
+                                    </label>
+
+                                    {isChecked && (
+                                      <div className="mt-2 pl-6 animate-in fade-in duration-150">
+                                        <input
+                                          type="text"
+                                          placeholder="Tuliskan pilihan Anda di sini..."
+                                          value={otherTextMap[f.field_id] || ''}
+                                          onChange={(e) => {
+                                            const text = e.target.value;
+                                            setOtherTextMap((prev) => ({ ...prev, [f.field_id]: text }));
+                                            const otherVal = text.trim() ? `Lainnya: ${text.trim()}` : 'Lainnya';
+                                            const filtered = currentArr.filter((x) => !x.startsWith('Lainnya') && x !== opt);
+                                            handleFieldAnswerChange(f.field_id, [...filtered, otherVal]);
+                                          }}
+                                          className="w-full px-2.5 py-1.5 text-xs bg-white border border-sky-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-sky-500 shadow-xs placeholder:text-slate-400"
+                                          autoFocus
+                                        />
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              }
+
+                              return (
+                                <label key={opt} className="flex items-center gap-2 p-2 rounded-lg border text-xs cursor-pointer hover:bg-slate-50">
+                                  <input
+                                    type="checkbox"
+                                    checked={isChecked}
+                                    onChange={() => handleCheckboxToggle(f.field_id, opt)}
+                                    className="text-sky-600 rounded"
+                                  />
+                                  <span>{opt}</span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        );
+                      })()}
 
                       {f.type === 'file' && (
                         <FileUploadField
