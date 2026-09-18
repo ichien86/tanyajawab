@@ -101,6 +101,30 @@ async function run() {
   const qId = q.body.data._id;
   console.log('   ✅ Pertanyaan kuesioner berhasil dibuat, ID:', qId);
 
+  // 3b. Menguji POST /api/qna/questions tanpa content eksplisit (fallback ke label pertanyaan pertama)
+  console.log('3b. Menguji POST /api/qna/questions dengan fallback judul otomatis dan upload_text');
+  const qFallback = await invoke('POST', '/api/qna/questions', {
+    session_id: 'default_session',
+    content: '',
+    author: '',
+    is_anon: true,
+    response_type: 'structured',
+    fields: [
+      {
+        field_id: 'f_test_fallback',
+        type: 'file',
+        label: 'Lampirkan Foto Kartu Identitas',
+        upload_text: 'Klik atau Ambil Foto KTP',
+        required: true
+      }
+    ]
+  });
+  assert.strictEqual(qFallback.statusCode, 201);
+  assert.strictEqual(qFallback.body.success, true);
+  assert.strictEqual(qFallback.body.data.question.content, 'Lampirkan Foto Kartu Identitas');
+  assert.strictEqual(qFallback.body.data.question.fields[0].upload_text, 'Klik atau Ambil Foto KTP');
+  console.log('   ✅ Fallback judul dan upload_text tersimpan dengan sempurna');
+
   // 4. Submit Jawaban Kuesioner ke Pertanyaan Tersebut
   console.log('4. Menguji POST /api/qna/questions/:id/answers (Jawaban Terstruktur)');
   const ans = await invoke('POST', `/api/qna/questions/${qId}/answers`, {

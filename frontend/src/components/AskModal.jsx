@@ -163,40 +163,81 @@ export default function AskModal({ isOpen, onClose, onSubmit }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!content.trim()) return;
+
+    let targetContent = content.trim();
+    if (responseType === 'structured') {
+      if (!targetContent) {
+        // Fallback ke label pertanyaan kuesioner pertama yang terisi
+        const firstWithLabel = fields.find((f) => f && f.label && f.label.trim());
+        if (firstWithLabel) {
+          targetContent = firstWithLabel.label.trim();
+        } else {
+          targetContent = 'Kuesioner Diskusi';
+        }
+      }
+
+      if (!fields || fields.length === 0) {
+        alert('Harap tambahkan setidaknya satu pertanyaan kuesioner.');
+        return;
+      }
+
+      for (let i = 0; i < fields.length; i++) {
+        const f = fields[i];
+        if (f.type === 'radio' || f.type === 'checkbox') {
+          const validOpts = (f.options || []).map((o) => String(o).trim()).filter(Boolean);
+          if (validOpts.length === 0) {
+            alert(`Pertanyaan #${i + 1} (${f.type === 'radio' ? 'Pilihan Ganda' : 'Checkbox'}) harus memiliki setidaknya satu opsi pilihan.`);
+            return;
+          }
+        }
+      }
+    } else {
+      if (!targetContent) {
+        alert('Harap tuliskan pertanyaan Anda.');
+        return;
+      }
+    }
 
     setLoading(true);
     try {
       // Pastikan validitas seluruh logika kondisional sebelum submit
       const sanitizedFields = responseType === 'structured' ? fields.map((f, fIdx) => {
-        if (!f.logic || !f.logic.parent_id) {
-          return { ...f, logic: null };
-        }
-        const parent = fields.slice(0, fIdx).find((p) => p.field_id === f.logic.parent_id);
-        if (!parent) {
-          return { ...f, logic: null };
-        }
-        if (parent.type === 'radio' || parent.type === 'checkbox') {
-          const validOpts = (parent.options || []).map((o) => String(o).trim()).filter(Boolean);
-          if (f.logic.operator === 'equals' || f.logic.operator === 'not_equals' || f.logic.operator === 'contains') {
-            const trigger = validOpts.includes(f.logic.trigger_value)
-              ? f.logic.trigger_value
-              : (validOpts[0] || '');
-            return {
-              ...f,
-              logic: {
-                ...f.logic,
-                trigger_value: trigger
+        const cleanLabel = (f.label && f.label.trim()) || `Pertanyaan #${fIdx + 1}`;
+        const cleanOpts = Array.isArray(f.options)
+          ? f.options.map((o) => String(o).trim()).filter(Boolean)
+          : [];
+        const cleanUploadText = (f.upload_text || '').trim();
+
+        let cleanLogic = null;
+        if (f.logic && f.logic.parent_id) {
+          const parent = fields.slice(0, fIdx).find((p) => p.field_id === f.logic.parent_id);
+          if (parent) {
+            cleanLogic = { ...f.logic };
+            if (parent.type === 'radio' || parent.type === 'checkbox') {
+              const parentValidOpts = (parent.options || []).map((o) => String(o).trim()).filter(Boolean);
+              if (f.logic.operator === 'equals' || f.logic.operator === 'not_equals' || f.logic.operator === 'contains') {
+                cleanLogic.trigger_value = parentValidOpts.includes(f.logic.trigger_value)
+                  ? f.logic.trigger_value
+                  : (parentValidOpts[0] || '');
               }
-            };
+            }
           }
         }
-        return f;
+
+        return {
+          field_id: f.field_id,
+          type: f.type,
+          label: cleanLabel,
+          upload_text: cleanUploadText,
+          options: cleanOpts,
+          required: Boolean(f.required),
+          logic: cleanLogic
+        };
       }) : [];
 
       await onSubmit({
-        content: content.trim(),
-        author: isAnon ? null : author.trim(),
+        content: targetContent,
+        author: isAnon ? null : (author.trim() || 'Peserta'),
         is_anon: isAnon,
         response_type: responseType,
         fields: sanitizedFields
@@ -204,7 +245,7 @@ export default function AskModal({ isOpen, onClose, onSubmit }) {
       resetForm();
       onClose();
     } catch (err) {
-      alert('Gagal mengirim pertanyaan: ' + err.message);
+      alert('Gagal mengirim pertanyaan: ' + (err.message || 'Terjadi kesalahan sistem'));
     } finally {
       setLoading(false);
     }
@@ -285,12 +326,12 @@ export default function AskModal({ isOpen, onClose, onSubmit }) {
           {/* Isi Pertanyaan Utama */}
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-              {responseType === 'structured' ? 'Judul / Topik Pertanyaan Kuesioner' : 'Pertanyaan Anda'}
+              {responseType === 'structured' ? 'Judul / Topik Pertanyaan Kuesioner (Opsional)' : 'Pertanyaan Anda'}
             </label>
             <textarea
-              required
+              required={responseType === 'free_text'}
               rows={responseType === 'structured' ? 2 : 3}
-              placeholder={responseType === 'structured' ? 'Contoh: Identifikasi Kesiapan Posko Bantuan di Titik A' : 'Tulis pertanyaan Anda di sini...'}
+              placeholder={responseType === 'structured' ? 'Contoh: Identifikasi Kesiapan Posko Bantuan (opsional, otomatis menggunakan pertanyaan di bawah jika kosong)' : 'Tulis pertanyaan Anda di sini...'}
               value={content}
               onChange={(e) => setContent(e.target.value)}
               className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition resize-none"
@@ -333,8 +374,14 @@ export default function AskModal({ isOpen, onClose, onSubmit }) {
                         <label className="block text-[11px] font-semibold text-slate-600 mb-0.5">Isi Pertanyaan / Label:</label>
                         <input
                           type="text"
-                          required
                           value={f.label}
+                          placeholder={`Pertanyaan #${fIdx + 1} (contoh: ${f.type === 'radio' ? 'Pilih salah satu opsi' : f.type === 'checkbox' ? 'Pilih opsi yang sesuai' : f.type === 'file' ? 'Unggah dokumen bukti' : 'Tulis pertanyaan di sini'}...)`}
+                          onFocus={(e) => {
+                            const v = (e.target.value || '').trim();
+                            if (!v || v === 'Pilih salah satu opsi:' || /^Pertanyaan\s*#\d+$/i.test(v)) {
+                              handleUpdateField(fIdx, { label: '' });
+                            }
+                          }}
                           onChange={(e) => handleUpdateField(fIdx, { label: e.target.value })}
                           className="w-full px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:ring-1 focus:ring-sky-500"
                         />
@@ -407,6 +454,13 @@ export default function AskModal({ isOpen, onClose, onSubmit }) {
                             <input
                               type="text"
                               value={opt}
+                              placeholder={`Pilihan ${oIdx + 1}`}
+                              onFocus={(e) => {
+                                const v = (e.target.value || '').trim();
+                                if (['Opsi Ya', 'Opsi Tidak'].includes(v) || /^Pilihan\s*\d+$/i.test(v)) {
+                                  handleUpdateOption(fIdx, oIdx, '');
+                                }
+                              }}
                               onChange={(e) => handleUpdateOption(fIdx, oIdx, e.target.value)}
                               className="flex-1 px-2 py-1 text-xs bg-white border border-slate-200 rounded focus:outline-none"
                             />
@@ -473,9 +527,10 @@ export default function AskModal({ isOpen, onClose, onSubmit }) {
                                     : p.type === 'file'
                                     ? 'Unggah Berkas'
                                     : 'Teks';
+                                  const parentText = (p.label || '').trim() || `Pertanyaan #${pIdx + 1}`;
                                   return (
                                     <option key={p.field_id} value={p.field_id}>
-                                      #{pIdx + 1} [{typeLabel}]: {p.label.substring(0, 35)}...
+                                      #{pIdx + 1} [{typeLabel}]: {parentText.substring(0, 35)}...
                                     </option>
                                   );
                                 })}
@@ -740,7 +795,7 @@ export default function AskModal({ isOpen, onClose, onSubmit }) {
             </button>
             <button
               type="submit"
-              disabled={loading || !content.trim()}
+              disabled={loading || (responseType === 'free_text' && !content.trim())}
               className="px-5 py-2.5 bg-sky-600 hover:bg-sky-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 transition"
             >
               <Send className="w-4 h-4" />

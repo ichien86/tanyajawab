@@ -83,6 +83,7 @@ export default function QuestionCard({
         });
         const data = await res.json();
         if (!data.success) throw new Error(data.message);
+        if (onAddAnswer) onAddAnswer(question._id, null, true);
       } else {
         await onAddAnswer(question._id, {
           content: freeTextContent.trim(),

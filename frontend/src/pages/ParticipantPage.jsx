@@ -100,7 +100,11 @@ export default function ParticipantPage() {
     }
   };
 
-  const handleAddAnswer = async (questionId, payload) => {
+  const handleAddAnswer = async (questionId, payload, isRefreshOnly = false) => {
+    if (isRefreshOnly) {
+      fetchQuestions();
+      return;
+    }
     const res = await fetch(`/api/qna/questions/${questionId}/answers`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

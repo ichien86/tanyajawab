@@ -109,7 +109,15 @@ router.post('/questions', async (req, res) => {
       fields = []
     } = req.body;
 
-    if (!content || !content.trim()) {
+    let finalContent = (content || '').trim();
+    if (!finalContent && response_type === 'structured' && Array.isArray(fields) && fields.length > 0) {
+      const firstValidField = fields.find((f) => f && f.label && f.label.trim());
+      if (firstValidField) {
+        finalContent = firstValidField.label.trim();
+      }
+    }
+
+    if (!finalContent) {
       return res.status(400).json({ success: false, message: 'Isi pertanyaan tidak boleh kosong.' });
     }
 
@@ -119,8 +127,11 @@ router.post('/questions', async (req, res) => {
       formattedFields = fields.map((f, idx) => ({
         field_id: f.field_id || `field_${Date.now()}_${idx}`,
         type: f.type || 'short_text',
-        label: f.label || `Pertanyaan #${idx + 1}`,
-        options: Array.isArray(f.options) ? f.options : [],
+        label: (f.label || `Pertanyaan #${idx + 1}`).trim(),
+        upload_text: (f.upload_text || '').trim(),
+        options: Array.isArray(f.options)
+          ? f.options.map((o) => String(o).trim()).filter(Boolean)
+          : [],
         required: Boolean(f.required),
         order: idx + 1,
         logic: f.logic && f.logic.parent_id ? {
@@ -135,7 +146,7 @@ router.post('/questions', async (req, res) => {
     const newQuestion = await QnaThread.create({
       session_id,
       question: {
-        content: content.trim(),
+        content: finalContent,
         author: is_anon ? null : (author ? author.trim() : 'Peserta'),
         is_anon: Boolean(is_anon),
         response_type: response_type === 'structured' ? 'structured' : 'free_text',
