@@ -109,6 +109,13 @@ router.post('/questions', async (req, res) => {
       fields = []
     } = req.body;
 
+    const isAnon = Boolean(is_anon);
+    const cleanAuthor = (author || '').trim();
+
+    if (!isAnon && !cleanAuthor) {
+      return res.status(400).json({ success: false, message: 'Nama atau instansi wajib diisi jika tidak memilih opsi anonim.' });
+    }
+
     let finalContent = (content || '').trim();
     if (!finalContent && response_type === 'structured' && Array.isArray(fields) && fields.length > 0) {
       const firstValidField = fields.find((f) => f && f.label && f.label.trim());
@@ -148,8 +155,8 @@ router.post('/questions', async (req, res) => {
       session_id,
       question: {
         content: finalContent,
-        author: is_anon ? null : (author ? author.trim() : 'Peserta'),
-        is_anon: Boolean(is_anon),
+        author: isAnon ? null : cleanAuthor,
+        is_anon: isAnon,
         response_type: response_type === 'structured' ? 'structured' : 'free_text',
         fields: formattedFields,
         submitted_at: new Date()

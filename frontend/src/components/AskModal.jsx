@@ -16,7 +16,7 @@ const createDefaultFields = () => [
 export default function AskModal({ isOpen, onClose, onSubmit }) {
   const [content, setContent] = useState('');
   const [author, setAuthor] = useState('');
-  const [isAnon, setIsAnon] = useState(true);
+  const [isAnon, setIsAnon] = useState(false);
   const [responseType, setResponseType] = useState('free_text'); // 'free_text' | 'structured'
   const [fields, setFields] = useState(createDefaultFields());
   const [loading, setLoading] = useState(false);
@@ -24,7 +24,7 @@ export default function AskModal({ isOpen, onClose, onSubmit }) {
   const resetForm = () => {
     setContent('');
     setAuthor('');
-    setIsAnon(true);
+    setIsAnon(false);
     setResponseType('free_text');
     setFields(createDefaultFields());
   };
@@ -178,6 +178,11 @@ export default function AskModal({ isOpen, onClose, onSubmit }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!isAnon && !author.trim()) {
+      alert('Nama atau Instansi wajib diisi jika tidak memilih opsi anonim.');
+      return;
+    }
+
     let targetContent = content.trim();
     if (responseType === 'structured') {
       if (!targetContent) {
@@ -298,6 +303,48 @@ export default function AskModal({ isOpen, onClose, onSubmit }) {
 
         {/* Form Body (Scrollable) */}
         <form onSubmit={handleSubmit} className="p-5 overflow-y-auto space-y-4 flex-1">
+          {/* Identitas Penanya (Diutamakan di atas) */}
+          <div className="p-3.5 bg-slate-50/80 rounded-2xl border border-slate-200/80 space-y-2.5">
+            <div className="flex items-center justify-between gap-2">
+              <label className="flex items-center gap-1.5 text-xs font-bold text-slate-700 uppercase tracking-wider">
+                <User className="w-3.5 h-3.5 text-sky-600" />
+                <span>Identitas Penanya</span>
+                {!isAnon && <span className="text-rose-500 font-bold">*</span>}
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer select-none text-xs font-medium text-slate-600 hover:text-slate-900 transition">
+                <input
+                  type="checkbox"
+                  checked={isAnon}
+                  onChange={(e) => setIsAnon(e.target.checked)}
+                  className="w-4 h-4 rounded text-sky-600 focus:ring-sky-500 border-slate-300 cursor-pointer"
+                />
+                <span className="flex items-center gap-1">
+                  <EyeOff className="w-3.5 h-3.5 text-slate-500" />
+                  Kirim sebagai Anonim
+                </span>
+              </label>
+            </div>
+
+            {!isAnon ? (
+              <div>
+                <input
+                  type="text"
+                  required
+                  placeholder="Nama Lengkap / Instansi Anda (Wajib diisi)..."
+                  value={author}
+                  onChange={(e) => setAuthor(e.target.value)}
+                  className="w-full px-3.5 py-2 text-xs bg-white border border-slate-300 focus:border-sky-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 text-slate-800 placeholder-slate-400 font-medium transition"
+                />
+              </div>
+            ) : (
+              <div className="px-3 py-2 bg-sky-50/70 border border-sky-100 rounded-xl text-[11px] text-sky-700 flex items-center gap-1.5">
+                <EyeOff className="w-3.5 h-3.5 text-sky-600 flex-shrink-0" />
+                <span>Identitas Anda akan disembunyikan dan ditampilkan sebagai <strong>Peserta Anonim</strong>.</span>
+              </div>
+            )}
+          </div>
+
           {/* Pilihan Format Pertanyaan */}
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
@@ -824,35 +871,6 @@ export default function AskModal({ isOpen, onClose, onSubmit }) {
             </div>
           )}
 
-          {/* Opsi Kirim sebagai Anonim */}
-          <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-            <label className="flex items-center justify-between cursor-pointer select-none">
-              <div className="flex items-center gap-2">
-                <EyeOff className="w-4 h-4 text-sky-600" />
-                <span className="text-xs font-semibold text-slate-800">Kirim sebagai Anonim</span>
-              </div>
-              <input
-                type="checkbox"
-                checked={isAnon}
-                onChange={(e) => setIsAnon(e.target.checked)}
-                className="w-4 h-4 rounded text-sky-600"
-              />
-            </label>
-
-            {!isAnon && (
-              <div className="mt-2 pt-2 border-t border-slate-200">
-                <input
-                  type="text"
-                  required={!isAnon}
-                  placeholder="Nama Anda / Instansi"
-                  value={author}
-                  onChange={(e) => setAuthor(e.target.value)}
-                  className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-sky-500"
-                />
-              </div>
-            )}
-          </div>
-
           {/* Tombol Aksi */}
           <div className="flex items-center justify-end gap-2 pt-2">
             <button
@@ -864,7 +882,7 @@ export default function AskModal({ isOpen, onClose, onSubmit }) {
             </button>
             <button
               type="submit"
-              disabled={loading || (responseType === 'free_text' && !content.trim())}
+              disabled={loading || (!isAnon && !author.trim()) || (responseType === 'free_text' && !content.trim())}
               className="px-5 py-2.5 bg-sky-600 hover:bg-sky-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 transition"
             >
               <Send className="w-4 h-4" />

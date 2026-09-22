@@ -125,6 +125,18 @@ async function run() {
   assert.strictEqual(qFallback.body.data.question.fields[0].upload_text, 'Klik atau Ambil Foto KTP');
   console.log('   ✅ Fallback judul dan upload_text tersimpan dengan sempurna');
 
+  // 3c. Menguji validasi identitas penanya: wajib isi nama jika is_anon=false
+  console.log('3c. Menguji validasi identitas penanya (wajib diisi jika bukan anonim)');
+  const qInvalidAuthor = await invoke('POST', '/api/qna/questions', {
+    session_id: 'default_session',
+    content: 'Pertanyaan tanpa nama dan bukan anonim',
+    author: '   ',
+    is_anon: false
+  });
+  assert.strictEqual(qInvalidAuthor.statusCode, 400);
+  assert.strictEqual(qInvalidAuthor.body.success, false);
+  console.log('   ✅ Backend berhasil memvalidasi dan menolak pertanyaan tanpa nama saat is_anon=false');
+
   // 4. Submit Jawaban Kuesioner ke Pertanyaan Tersebut
   console.log('4. Menguji POST /api/qna/questions/:id/answers (Jawaban Terstruktur)');
   const ans = await invoke('POST', `/api/qna/questions/${qId}/answers`, {
