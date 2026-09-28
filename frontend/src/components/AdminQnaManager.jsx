@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Search, ShieldCheck, Trash2, Send, FileSpreadsheet, FileText, Download, ClipboardList, MessageSquare, ExternalLink } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Search, ShieldCheck, Trash2, Send, FileSpreadsheet, FileText, Download, ClipboardList, MessageSquare, ExternalLink, X } from 'lucide-react';
 
 export default function AdminQnaManager({
   questions = [],
@@ -14,6 +14,47 @@ export default function AdminQnaManager({
   const [filter, setFilter] = useState('all'); // all | open | answered | hidden
   const [search, setSearch] = useState('');
   const [replyTextMap, setReplyTextMap] = useState({});
+  const searchInputRef = useRef(null);
+
+  const isMac = typeof window !== 'undefined' && /Mac|iPod|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+
+  // Keyboard shortcut listener
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      const target = e.target;
+      const isInputActive =
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.tagName === 'SELECT' ||
+        target.isContentEditable;
+
+      const isCmdK = (e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K');
+      const isSlash = e.key === '/' && !isInputActive;
+
+      if (isCmdK || isSlash) {
+        e.preventDefault();
+        if (searchInputRef.current) {
+          searchInputRef.current.focus();
+          searchInputRef.current.select();
+        }
+        return;
+      }
+
+      if (e.key === 'Escape') {
+        if (document.activeElement === searchInputRef.current) {
+          e.preventDefault();
+          if (search) {
+            setSearch('');
+          } else {
+            searchInputRef.current.blur();
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [search]);
 
   const filtered = questions.filter((q) => {
     if (filter === 'open' && q.status !== 'open') return false;
@@ -70,15 +111,35 @@ export default function AdminQnaManager({
       {/* Bar Ekspor & Filter */}
       <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-          <div className="w-full sm:w-64 relative">
+          <div className="w-full sm:w-72 relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
             <input
+              ref={searchInputRef}
               type="text"
-              placeholder="Cari pertanyaan / topik..."
+              placeholder={`Cari topik... (${isMac ? '⌘K' : 'Ctrl+K'} atau /)`}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-1 focus:ring-sky-500"
+              className="w-full pl-9 pr-14 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-1 focus:ring-sky-500"
             />
+            <div className="absolute right-2 top-1.5 flex items-center">
+              {search ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearch('');
+                    searchInputRef.current?.focus();
+                  }}
+                  title="Hapus pencarian (Esc)"
+                  className="p-1 rounded-md text-slate-400 hover:text-slate-600 transition"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              ) : (
+                <kbd className="hidden sm:inline-block px-1.5 py-0.5 bg-slate-200/60 border border-slate-300/70 rounded text-[9px] font-mono text-slate-400 select-none">
+                  /
+                </kbd>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center gap-1 overflow-x-auto">
