@@ -32,13 +32,39 @@ function authenticateAdmin(req, res, next) {
   }
 }
 
+function isSuperAdmin(admin) {
+  if (!admin) return false;
+  if (admin.role === 'superadmin') return true;
+  const adminEmails = (process.env.ADMIN_EMAILS || '')
+    .split(',')
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+  if (admin.email && adminEmails.includes(admin.email.toLowerCase())) {
+    return true;
+  }
+  return false;
+}
+
+function canManageSession(admin, session) {
+  if (!admin || !session) return false;
+  if (isSuperAdmin(admin)) return true;
+  if (session.owner_email && admin.email && session.owner_email.toLowerCase() === admin.email.toLowerCase()) {
+    return true;
+  }
+  // Fallback akses untuk default_session awal
+  if (session.session_id === 'default_session') return true;
+  return false;
+}
+
 function generateToken(payload) {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '8h' });
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: '24h' });
 }
 
 module.exports = {
   authenticateAdmin,
   generateToken,
+  isSuperAdmin,
+  canManageSession,
   JWT_SECRET
 };
 

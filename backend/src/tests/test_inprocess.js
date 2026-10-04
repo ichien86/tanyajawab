@@ -251,6 +251,56 @@ async function run() {
   assert.ok(csv.body.includes('dapur umum'));
   console.log('   ✅ Ekspor CSV Tanya Jawab berhasil');
 
+  // 11. Menguji Multi-Sesi: Buat sesi baru, lookup dengan kode, dan ambil daftar sesi
+  console.log('11. Menguji Pembuatan & Pengelolaan Multi-Sesi');
+  const testCode = 'D' + Math.floor(1000 + Math.random() * 9000);
+  const newSessRes = await invoke('POST', '/api/admin/sessions', {
+    title: 'Workshop Digitalisasi Daerah 2026',
+    description: 'Forum pembahasan transformasi digital layanan publik',
+    session_code: testCode
+  }, { authorization: `Bearer ${token}` });
+  assert.strictEqual(newSessRes.statusCode, 201);
+  const newSess = newSessRes.body;
+  assert.strictEqual(newSess.success, true);
+  assert.strictEqual(newSess.data.session_code, testCode);
+  const newSessionId = newSess.data.session_id;
+  console.log(`   ✅ Sesi baru berhasil dibuat dengan kode ${testCode} & ID:`, newSessionId);
+
+  // 11b. Lookup sesi berdasarkan kode (GET /api/admin/session?s=...)
+  const lookupRes = await invoke('GET', `/api/admin/session?s=${testCode}`);
+  assert.strictEqual(lookupRes.statusCode, 200);
+  const lookupData = lookupRes.body;
+  assert.strictEqual(lookupData.data.session_id, newSessionId);
+  console.log(`   ✅ Lookup publik sesi via kode "?s=${testCode}" berhasil ditemukan`);
+
+  // 11c. Ambil daftar sesi admin (GET /api/admin/sessions)
+  const listSessRes = await invoke('GET', '/api/admin/sessions', null, { authorization: `Bearer ${token}` });
+  assert.strictEqual(listSessRes.statusCode, 200);
+  const listSess = listSessRes.body;
+  assert.ok(listSess.data.some(s => s.session_code === testCode));
+  console.log('   ✅ Daftar multi-sesi berhasil memuat sesi-sesi aktif');
+
+  // 12. Menguji Isolasi Pertanyaan Antar Sesi
+  console.log('12. Menguji Isolasi Pertanyaan Antar Sesi');
+  const qNewSess = await invoke('POST', '/api/qna/questions', {
+    session_id: newSessionId,
+    content: 'Apakah ada pelatihan teknis lanjutan?',
+    author: 'Peserta Workshop',
+    is_anon: false
+  });
+  assert.strictEqual(qNewSess.statusCode, 201);
+
+  // Pertanyaan sesi DIGI-26 TIDAK boleh muncul di default_session
+  const defQ = await invoke('GET', '/api/qna/questions?session_id=default_session');
+  const defQData = defQ.body;
+  assert.ok(!defQData.data.some(q => q.question.content === 'Apakah ada pelatihan teknis lanjutan?'));
+
+  // Pertanyaan sesi DIGI-26 HARUS muncul di newSessionId
+  const digiQ = await invoke('GET', `/api/qna/questions?session_id=${newSessionId}`);
+  const digiQData = digiQ.body;
+  assert.ok(digiQData.data.some(q => q.question.content === 'Apakah ada pelatihan teknis lanjutan?'));
+  console.log('   ✅ Isolasi data pertanyaan antar sesi 100% terverifikasi');
+
   console.log('\n🎉 SELURUH PENGUJIAN IN-PROCESS BERHASIL 100%!');
 }
 

@@ -505,4 +505,5 @@ router.get('/export/csv', authenticateAdmin, async (req, res) => {
   }
 });
 
+router.cleanupAnswerFiles = cleanupAnswerFiles;
 module.exports = router;

@@ -18,7 +18,8 @@ export default function QnaFeed({
   onSearchChange,
   isAdmin = false,
   onStatusChange,
-  onDeleteQuestion
+  onDeleteQuestion,
+  isSessionActive = true
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
@@ -82,7 +83,7 @@ export default function QnaFeed({
       } else if (e.key === '?' || (e.shiftKey && e.key === '/')) {
         e.preventDefault();
         setIsShortcutsOpen((prev) => !prev);
-      } else if (e.key === 'c' || e.key === 'C' || e.key === 'n' || e.key === 'N') {
+      } else if ((e.key === 'c' || e.key === 'C' || e.key === 'n' || e.key === 'N') && isSessionActive) {
         e.preventDefault();
         setIsModalOpen(true);
       }
@@ -90,7 +91,7 @@ export default function QnaFeed({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isModalOpen, isShortcutsOpen, search, onSearchChange, onSortChange]);
+  }, [isModalOpen, isShortcutsOpen, search, onSearchChange, onSortChange, isSessionActive]);
 
   return (
     <div className="space-y-4 pb-20">
@@ -296,16 +297,18 @@ export default function QnaFeed({
       )}
 
       {/* Floating Action Button (FAB) Ajukan Pertanyaan */}
-      <div className="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-20">
-        <button
-          type="button"
-          onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-full shadow-lg shadow-sky-600/30 hover:shadow-sky-600/50 active:scale-95 transition duration-150 font-semibold text-sm"
-        >
-          <Plus className="w-5 h-5" />
-          <span className="pr-1">Tanya Sesuatu</span>
-        </button>
-      </div>
+      {isSessionActive && (
+        <div className="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-20">
+          <button
+            type="button"
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-full shadow-lg shadow-sky-600/30 hover:shadow-sky-600/50 active:scale-95 transition duration-150 font-semibold text-sm"
+          >
+            <Plus className="w-5 h-5" />
+            <span className="pr-1">Tanya Sesuatu</span>
+          </button>
+        </div>
+      )}
 
       {/* Modal Ajukan Pertanyaan */}
       <AskModal

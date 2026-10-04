@@ -16,9 +16,13 @@ let dbMode = 'uninitialized'; // 'mongodb' | 'embedded'
 // Model Schemas untuk Mongoose (BSON)
 // -------------------------------------------------------------
 const UserAdminSchema = new mongoose.Schema({
-  username: { type: String, required: true, unique: true },
-  password_hash: { type: String, required: true },
-  role: { type: String, enum: ['administrator', 'fasilitator'], default: 'administrator' },
+  username: { type: String, required: true },
+  email: { type: String, default: null },
+  google_id: { type: String, default: null },
+  name: { type: String, default: '' },
+  picture: { type: String, default: '' },
+  password_hash: { type: String, default: null },
+  role: { type: String, enum: ['superadmin', 'administrator', 'fasilitator'], default: 'administrator' },
   is_active: { type: Boolean, default: true },
   last_login: { type: Date, default: Date.now },
   security_logs: [{
@@ -31,10 +35,13 @@ const UserAdminSchema = new mongoose.Schema({
 
 const SessionSchema = new mongoose.Schema({
   session_id: { type: String, required: true, unique: true },
+  session_code: { type: String, required: true },
   title: { type: String, required: true },
   description: { type: String, default: '' },
+  owner_email: { type: String, default: 'admin@tanyajawab.local' },
+  owner_name: { type: String, default: 'Administrator' },
   is_active: { type: Boolean, default: true },
-  session_code: { type: String, default: 'SOS-2026' },
+  allow_anon: { type: Boolean, default: true },
   initial_seeded: { type: Boolean, default: false }
 }, { timestamps: true });
 
