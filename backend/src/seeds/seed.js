@@ -38,19 +38,21 @@ async function runSeed() {
     }
   }
 
-  // 2. Seed Sesi Sosialisasi
-  const sessionId = 'default_session';
+  // 2. Seed Sesi POKIR 2028
+  const sessionId = 'pokir_2028';
   let existingSession = await Session.findOne({ session_id: sessionId });
   if (!existingSession) {
     existingSession = await Session.create({
       session_id: sessionId,
-      title: 'Forum Tanya Jawab & Identifikasi Masalah Lapangan',
+      title: 'Tanya Jawab Pengelolaan POKIR Kabupaten Purworejo',
       description: 'Ruang interaktif: siapapun boleh bertanya, siapapun boleh menjawab.',
       is_active: true,
-      session_code: 'SOS-2026',
+      session_code: 'pokir_2028',
+      owner_email: 'ichien86@gmail.com',
+      owner_name: 'Superadmin',
       initial_seeded: false
     });
-    console.log('✅ Sesi sosialisasi default dibuat.');
+    console.log('✅ Sesi POKIR 2028 dibuat.');
   }
 
   // 3. Seed Thread Q&A (Hanya di-seed 1x saat database pertama kali dibuat)

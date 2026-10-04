@@ -543,15 +543,24 @@ router.delete('/sessions/:sessionId', authenticateAdmin, async (req, res) => {
  */
 router.get('/session', async (req, res) => {
   try {
-    const lookup = req.query.session_id || req.query.s || req.query.code || 'default_session';
+    const lookup = req.query.session_id || req.query.s || req.query.code || 'pokir_2028';
 
     let session = await Session.findOne({ session_id: lookup });
     if (!session) {
+      session = await Session.findOne({ session_code: lookup });
+    }
+    if (!session) {
       session = await Session.findOne({ session_code: lookup.toUpperCase() });
+    }
+    if (!session) {
+      session = await Session.findOne({ session_code: lookup.toLowerCase() });
+    }
+    // Kompatibilitas mundur jika mencari default_session
+    if (!session && (lookup === 'default_session' || lookup === 'SOS-2026')) {
+      session = await Session.findOne({ session_id: 'pokir_2028' });
     }
 
     if (!session) {
-      // Jika mencari kode yang tidak ada, kembalikan 404
       return res.status(404).json({
         success: false,
         message: `Sesi "${lookup}" tidak ditemukan.`

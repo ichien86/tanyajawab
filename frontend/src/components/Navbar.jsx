@@ -8,9 +8,13 @@ export default function Navbar({ isConnected, session, onOpenQr, onOpenSwitchSes
         <div className="flex items-center justify-between gap-3">
           {/* Info Acara & Forum Tanya Jawab */}
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-9 h-9 rounded-xl bg-sky-600 flex items-center justify-center text-white font-bold text-sm shadow-sm flex-shrink-0">
+            <a
+              href="/"
+              title="Kembali ke Beranda Utama"
+              className="w-9 h-9 rounded-xl bg-sky-600 hover:bg-sky-700 flex items-center justify-center text-white font-bold text-sm shadow-sm flex-shrink-0 transition active:scale-95"
+            >
               <MessageSquare className="w-5 h-5" />
-            </div>
+            </a>
             <div className="truncate">
               <h1 className="font-bold text-slate-900 text-sm sm:text-base truncate">
                 {session?.title || 'Forum Tanya Jawab'}
