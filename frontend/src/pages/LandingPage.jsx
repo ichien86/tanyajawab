@@ -10,12 +10,7 @@ import {
   CheckCircle2,
   Radio,
   FileText,
-  HelpCircle,
-  Hash,
-  ExternalLink,
-  Users,
-  Flame,
-  UploadCloud
+  Hash
 } from 'lucide-react';
 
 export default function LandingPage() {
@@ -86,10 +81,10 @@ export default function LandingPage() {
               <div className="flex items-center gap-2">
                 <span className="font-extrabold text-base sm:text-lg text-slate-900 tracking-tight">TanyaJawab</span>
                 <span className="px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 font-bold text-[10px] uppercase tracking-wider">
-                  Multi-Sesi
+                  Platform Forum
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500 hidden sm:block">Platform Forum Aspirasi & Kuesioner Interaktif</p>
+              <p className="text-[11px] text-slate-500 hidden sm:block">Forum Aspirasi, Tanya Jawab & Kuesioner Interaktif</p>
             </div>
           </div>
 
@@ -99,7 +94,7 @@ export default function LandingPage() {
               className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-bold rounded-xl transition flex items-center gap-1.5 shadow-sm active:scale-95"
             >
               <Shield className="w-4 h-4 text-sky-400" />
-              <span>Login Admin / Buat Sesi</span>
+              <span>Masuk sebagai Admin</span>
             </a>
           </div>
         </div>
@@ -110,7 +105,7 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto px-4 text-center space-y-6">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-sky-100/80 border border-sky-200 text-sky-800 text-xs font-semibold">
             <Sparkles className="w-3.5 h-3.5 text-sky-600" />
-            <span>Versi Baru: Multi-Sesi, QR Code Peserta & Google Sign-In</span>
+            <span>Platform Tanya Jawab Multi-Sesi & Kuesioner Lapangan</span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight max-w-3xl mx-auto">
@@ -118,13 +113,13 @@ export default function LandingPage() {
           </h1>
 
           <p className="text-sm sm:text-base text-slate-600 max-w-2xl mx-auto leading-relaxed">
-            Wadahi aspirasi, ajukan pertanyaan, adakan polling kuesioner terstruktur, dan bagikan QR Code sesi langsung ke smartphone peserta tanpa perlu registrasi atau instal aplikasi.
+            Wadahi aspirasi, ajukan pertanyaan, polling kuesioner terstruktur, dan bagikan QR Code sesi langsung ke smartphone peserta tanpa perlu registrasi atau instal aplikasi.
           </p>
 
           {/* Dual Action Cards: Gabung Sesi & Akses Fasilitator */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-left max-w-4xl mx-auto pt-4">
             {/* Kartu 1: Untuk Peserta (Gabung Sesi) */}
-            <div className="bg-white p-6 sm:p-7 rounded-3xl border border-slate-200/80 shadow-xl shadow-slate-200/50 flex flex-col justify-between space-y-5">
+            <div className="bg-white p-6 sm:p-7 rounded-3xl border border-slate-200/80 shadow-xl shadow-slate-200/50 flex flex-col justify-between space-y-6">
               <div className="space-y-3">
                 <div className="w-10 h-10 rounded-2xl bg-sky-100 text-sky-600 flex items-center justify-center font-bold">
                   <Hash className="w-5 h-5" />
@@ -132,56 +127,39 @@ export default function LandingPage() {
                 <div>
                   <h3 className="font-extrabold text-slate-900 text-lg">Gabung ke Sesi Forum</h3>
                   <p className="text-xs text-slate-500">
-                    Masukkan kode sesi acara yang diberikan oleh panitia atau fasilitator rapat.
+                    Masukkan kode sesi acara untuk langsung bergabung dan berpartisipasi dalam sesi forum tanya jawab.
                   </p>
                 </div>
 
-                <form onSubmit={handleJoinSession} className="space-y-2 pt-1">
+                <form onSubmit={handleJoinSession} className="space-y-3 pt-1">
                   <div className="relative">
                     <input
                       type="text"
+                      required
                       placeholder="Masukkan Kode Sesi (misal: pokir_2028)"
                       value={sessionCodeInput}
                       onChange={(e) => setSessionCodeInput(e.target.value)}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs sm:text-sm font-semibold focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 pr-24"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs sm:text-sm font-semibold focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono uppercase tracking-wider"
                     />
-                    <button
-                      type="submit"
-                      className="absolute right-1.5 top-1.5 bottom-1.5 px-3.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-xs"
-                    >
-                      <span>Masuk</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
                   </div>
+                  <button
+                    type="submit"
+                    className="w-full py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-1.5 shadow-md active:scale-95"
+                  >
+                    <span>Masuk ke Forum Sesi</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
                 </form>
               </div>
 
-              {/* Sesi Unggulan / POKIR 2028 */}
-              <div className="p-4 rounded-2xl bg-gradient-to-r from-sky-50 to-indigo-50 border border-sky-100 space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-sky-900 flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    Sesi POKIR Terdaftar
-                  </span>
-                  <span className="font-mono bg-white px-2 py-0.5 rounded-md font-bold text-[11px] text-sky-700 border border-sky-200">
-                    pokir_2028
-                  </span>
-                </div>
-                <p className="text-xs font-semibold text-slate-800 line-clamp-1">
-                  Tanya Jawab Pengelolaan POKIR Kabupaten Purworejo
-                </p>
-                <a
-                  href="/?s=pokir_2028"
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-sky-700 hover:text-sky-900 pt-0.5"
-                >
-                  <span>Buka Forum Sesi POKIR 2028 Langsung</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </a>
+              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-500 flex items-center gap-2">
+                <QrCode className="w-4 h-4 text-slate-400 shrink-0" />
+                <span>Atau scan QR Code sesi yang dibagikan fasilitator untuk langsung bergabung.</span>
               </div>
             </div>
 
             {/* Kartu 2: Untuk Fasilitator / Admin (Google Login) */}
-            <div className="bg-white p-6 sm:p-7 rounded-3xl border border-slate-200/80 shadow-xl shadow-slate-200/50 flex flex-col justify-between space-y-5">
+            <div className="bg-white p-6 sm:p-7 rounded-3xl border border-slate-200/80 shadow-xl shadow-slate-200/50 flex flex-col justify-between space-y-6">
               <div className="space-y-3">
                 <div className="w-10 h-10 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold">
                   <Shield className="w-5 h-5" />
@@ -210,12 +188,9 @@ export default function LandingPage() {
                   className="w-full py-3 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 shadow-md active:scale-95"
                 >
                   <Shield className="w-4 h-4 text-sky-400" />
-                  <span>Masuk dengan Google (Portal Fasilitator)</span>
+                  <span>Masuk sebagai Admin / Fasilitator</span>
                   <ArrowRight className="w-4 h-4" />
                 </a>
-                <p className="text-[11px] text-center text-slate-400 mt-2">
-                  Akses instan tanpa perlu mendaftar manual kata sandi.
-                </p>
               </div>
             </div>
           </div>
@@ -273,10 +248,6 @@ export default function LandingPage() {
           </div>
 
           <div className="flex items-center gap-4 font-semibold">
-            <a href="/?s=pokir_2028" className="hover:text-sky-600 transition">
-              Forum POKIR 2028
-            </a>
-            <span className="text-slate-300">•</span>
             <a href="/admin" className="hover:text-sky-600 transition">
               Portal Admin
             </a>
