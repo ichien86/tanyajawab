@@ -1,3 +1,5 @@
+process.env.NODE_ENV = 'test';
+process.env.ADMIN_EMAILS = 'ichien86@gmail.com';
 const assert = require('assert');
 const { EventEmitter } = require('events');
 const { app } = require('../server');
@@ -204,16 +206,23 @@ async function run() {
   assert.strictEqual(uv.body.upvotesCount, 1);
   console.log('   ✅ Upvote berhasil ditambahkan');
 
-  // 6. Login Admin
-  console.log('6. Menguji POST /api/admin/login');
-  const l = await invoke('POST', '/api/admin/login', {
-    username: 'admin_utama',
-    password: 'admin123'
+  // 6. Login Admin via Google
+  console.log('6. Menguji Autentikasi Google Admin & Pemisahan Role (Superadmin vs Admin Sesi)');
+  const l = await invoke('POST', '/api/admin/google-login', {
+    credential: 'test:ichien86@gmail.com:Ichien Superadmin'
   });
   assert.strictEqual(l.statusCode, 200);
+  assert.strictEqual(l.body.admin.role, 'superadmin');
   assert.ok(l.body.token);
   const token = l.body.token;
-  console.log('   ✅ Login admin berhasil!');
+
+  // Uji login pengguna berikutnya yang bukan superadmin (hanya admin sesi)
+  const regular = await invoke('POST', '/api/admin/google-login', {
+    credential: 'test:budi@gmail.com:Budi Fasilitator'
+  });
+  assert.strictEqual(regular.statusCode, 200);
+  assert.strictEqual(regular.body.admin.role, 'administrator');
+  console.log('   ✅ Superadmin (ichien86@gmail.com) dan Admin Sesi terverifikasi sesuai peran!');
 
   // 7. Ubah status moderasi
   console.log('7. Menguji PATCH /api/qna/questions/:id/status');
